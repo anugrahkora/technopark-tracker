@@ -156,6 +156,7 @@ def discover_jobs():
 
 # -------------------- Supabase database --------------------
 
+
 def db_request(method, params=None, payload=None, prefer=None):
     headers = dict(db_headers)
 
@@ -171,12 +172,24 @@ def db_request(method, params=None, payload=None, prefer=None):
         timeout=30,
     )
 
+    if response.status_code >= 400:
+        logging.error(
+            "Supabase request failed: method=%s status=%s",
+            method,
+            response.status_code,
+        )
+        logging.error(
+            "Supabase response body: %s",
+            response.text[:1000],
+        )
+
     response.raise_for_status()
 
     if not response.content:
         return []
 
     return response.json()
+
 
 
 def utc_now():
