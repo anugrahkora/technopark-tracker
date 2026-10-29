@@ -158,11 +158,13 @@ def discover_jobs():
 
 
 
+
 def db_request(method, params=None, payload=None, prefer=None):
     headers = dict(db_headers)
 
-    # Use a server-identifying User-Agent for Supabase.
+    # Headers for server-side Supabase REST requests.
     headers["User-Agent"] = "TechnoparkJobMonitor/1.0"
+    headers["Accept"] = "application/json"
 
     if prefer:
         headers["Prefer"] = prefer
@@ -193,6 +195,7 @@ def db_request(method, params=None, payload=None, prefer=None):
         return []
 
     return response.json()
+
 
 
 
