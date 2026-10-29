@@ -39,7 +39,6 @@ session.headers.update({
 
 db_headers = {
     "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
     "Content-Type": "application/json",
 }
 
