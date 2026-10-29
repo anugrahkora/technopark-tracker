@@ -133,6 +133,17 @@ def discover_jobs():
     ]:
         try:
             html = fetch_html(url)
+            soup = BeautifulSoup(html, "html.parser")
+
+            job_links = [
+                a.get("href")
+                for a in soup.select("a[href]")
+                if "job-details" in a.get("href", "").lower()
+            ]
+
+            logging.info("Page title: %s", soup.title.get_text(strip=True) if soup.title else "No title")
+            logging.info("Job-detail links found: %d", len(job_links))
+            logging.info("Sample job links: %s", job_links[:10])
             jobs = parse_listing_page(html, search_results=is_search)
 
             logging.info(
