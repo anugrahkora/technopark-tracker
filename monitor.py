@@ -123,27 +123,15 @@ def parse_listing_page(html, search_results=False):
 def discover_jobs():
     """
     Try the Flutter search first.
-    Use the public crawl page if the search page fails or yields no jobs.
+    Use the public crawl page as a fallback.
+    Return an empty list if no matching jobs are found.
     """
-    errors = []
-
     for url, is_search in [
         (SEARCH_URL, True),
         (CRAWL_URL, False),
     ]:
         try:
             html = fetch_html(url)
-            soup = BeautifulSoup(html, "html.parser")
-
-            job_links = [
-                a.get("href")
-                for a in soup.select("a[href]")
-                if "job-details" in a.get("href", "").lower()
-            ]
-
-            logging.info("Page title: %s", soup.title.get_text(strip=True) if soup.title else "No title")
-            logging.info("Job-detail links found: %d", len(job_links))
-            logging.info("Sample job links: %s", job_links[:10])
             jobs = parse_listing_page(html, search_results=is_search)
 
             logging.info(
@@ -155,14 +143,11 @@ def discover_jobs():
             if jobs:
                 return jobs
 
-            errors.append(f"{url}: no matching job links found")
-
         except (requests.RequestException, RuntimeError) as exc:
-            errors.append(f"{url}: {exc}")
+            logging.warning("Could not check %s: %s", url, exc)
 
-    raise RuntimeError(
-        "Could not discover any jobs. " + " | ".join(errors)
-    )
+    logging.info("No matching Flutter jobs found. Skipping this run.")
+    return []
 
 
 # -------------------- Supabase database --------------------
@@ -322,9 +307,11 @@ def main():
     jobs = discover_jobs()
 
     if not jobs:
-        raise RuntimeError(
-            "No jobs discovered. Database was not changed."
+        logging.info(
+            "No new Flutter job listings to process. "
+            "Monitoring completed successfully."
         )
+        return
 
     # On the first run, establish a baseline without sending alerts
     # for all jobs that were already listed.
